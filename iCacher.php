@@ -1,7 +1,7 @@
 <?
     define( 'MAIN_FOLDER',      $_SERVER['DOCUMENT_ROOT'] . '/images_folder');
     define( 'CACHE_FOLDER',     MAIN_FOLDER ); //  ??? mb need
-    define( 'PHPTHUM_FOLDER',   $_SERVER['DOCUMENT_ROOT'] . '/phpthumb');
+    define( 'PHPTHUMB_FOLDER',  $_SERVER['DOCUMENT_ROOT'] . '/phpthumb');
     define( 'JPEG_QUALITY',     80);
 
 
@@ -43,7 +43,7 @@
 
         try
         {
-            include PHPTHUM_FOLDER . '/ThumbLib.inc.php';
+            include PHPTHUMB_FOLDER . '/ThumbLib.inc.php';
 
             $options = array(
                 'resizeUp'              => true,
