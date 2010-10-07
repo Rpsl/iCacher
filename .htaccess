@@ -1,0 +1,7 @@
+AddDefaultCharset UTF-8
+Options -Indexes
+
+RewriteEngine On
+RewriteBase /
+
+RewriteRule   ^images_folder/([0-9a-z]+)/([0-9a-z]+)/(.*)$  iCacher.php?param=$1&size=$2&file=$3 [L,QSA]
