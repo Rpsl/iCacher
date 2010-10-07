@@ -43,7 +43,7 @@
 
         try
         {
-            include '/ThumbLib.inc.php';
+            include PHPTHUM_FOLDER . '/ThumbLib.inc.php';
 
             $options = array(
                 'resizeUp'              => true,
