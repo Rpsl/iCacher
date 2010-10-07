@@ -1,9 +1,60 @@
-<?
-    define( 'MAIN_FOLDER',      $_SERVER['DOCUMENT_ROOT'] . '/images_folder');
-    define( 'CACHE_FOLDER',     MAIN_FOLDER ); //  ??? mb need
-    define( 'PHPTHUMB_FOLDER',  $_SERVER['DOCUMENT_ROOT'] . '/phpthumb');
-    define( 'JPEG_QUALITY',     80);
+<?php
 
+    /**
+     * @author  Rpsl ( 2010 )   < im.vitman@gmail.com >
+     * @link    http://github.com/Rpsl/iCacher
+     * @link    http://blog.rpsl.info
+     * @version 0.5
+     */
+
+    /**
+     * Скрипт iCacher создан что бы облечить кеширование изображений на сайте
+     * и организовать лаконичную возможность генерации картинок различных размеров.
+     * iCacher является т.н. роутером для http://phpthumb.gxdlabs.com/ и не будет
+     * работать правильно при отсутвие данной библиотеки.
+     *
+     * Для правильно работы подразумевается соблюдение нескольких правил:
+     *
+     *  1. В папке MAIN_FOLDER хранятся оригинальные изображения.
+     *  2. В папку CACHE_FOLDER будут храниться измененные изображения.
+     *  3. При обращение к несуществующему файлу из папки CACHE_FOLDER происходит
+     *      перенаправление на данный файл*, который в свою очередь создает
+     *      необходимый файл либо возвращет 404 ошибку.
+     *          * .htaccess rewrite rule:
+     *              RewriteRule   ^images_folder/([0-9a-z]+)/([0-9a-z]+)/(.*)$  iCacher.php?param=$1&size=$2&file=$3 [L,QSA]
+     *  4. После генерации изображений они должны быть доступны по прямому запросу.
+     *  5. Для обновления миниатюр вы должны самостоятельно организовать удаление
+     *      созданых скриптом файлов.
+     *      В крайнем случае можно использовать GET параметр flush с любым значением.
+     *
+     *
+     *  При необходимости создавайте собственные плагины или ф-ции обработки.
+     */
+
+    define( 'MAIN_FOLDER',      $_SERVER['DOCUMENT_ROOT'] . '/images_folder');
+
+    /**
+     * CACHE_FOLDER в большинстве случаев является простым алиасом для MAIN_FOLDER,
+     * но может быть полезна, если кеш картинок у вас лежит в не стандартной папке,
+     * например вынесен на отдельный домен и отдается другим web сервером.
+     *
+     * Будьте бдительны, если после генерации миниатюр они не будут доступны по
+     * URL который используется первый раз, то они не будут кешироваться на
+     * стороне клиента.
+     *
+     * define( 'CACHE_FOLDER', $_SERVER['DOCUMENT_ROOT'] . '/cache' );
+     */
+    define( 'CACHE_FOLDER',     MAIN_FOLDER );
+
+    /**
+     * Укажите путь к папке phpthumb
+     */
+    define( 'PHPTHUMB_FOLDER',  $_SERVER['DOCUMENT_ROOT'] . '/phpthumb');
+
+    /**
+     * Качество создаваемых изображений.
+     */
+    define( 'JPEG_QUALITY', 80);
 
     error_reporting( ~E_ALL );
     ini_set( 'display_errors', 0 );
@@ -11,7 +62,7 @@
     /* Paranoic mode */
     $_GET['file'] = preg_replace( '/[^A-Za-z0-9_.-]/',  '', $_GET['file'] );
     $_GET['size'] = preg_replace( '/[^x0-9]/',          '', $_GET['size'] );
-    
+
     $image = CACHE_FOLDER . '/' . $_GET['param'] . '/' . $_GET['size'] . '/' . $_GET['file'];
 
     if( file_exists( $image ) AND !isset( $_GET['flush'] ) )
@@ -22,7 +73,7 @@
         echo file_get_contents( $image );
         die();
     }
-    
+
     unset( $image );
 
     if( !empty( $_GET['file'] )
@@ -103,9 +154,8 @@
 
                 case 'rc':
                     /**
-                     * Rounded Corners
+                     * Скругленные углы
                      */
-
                     $file = RoundedCorners( $T, $_GET['file'], $size );
                 break;
 
