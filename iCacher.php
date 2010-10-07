@@ -31,6 +31,10 @@
      *  При необходимости создавайте собственные плагины или ф-ции обработки.
      */
 
+
+    /**
+     *  Папка с оригинальными изображениями
+     */
     define( 'MAIN_FOLDER',      $_SERVER['DOCUMENT_ROOT'] . '/images_folder');
 
     /**
@@ -41,8 +45,6 @@
      * Будьте бдительны, если после генерации миниатюр они не будут доступны по
      * URL который используется первый раз, то они не будут кешироваться на
      * стороне клиента.
-     *
-     * define( 'CACHE_FOLDER', $_SERVER['DOCUMENT_ROOT'] . '/cache' );
      */
     define( 'CACHE_FOLDER',     MAIN_FOLDER );
 
@@ -113,22 +115,13 @@
                 case 'rn':
                     /**
                      * Обычный ресайз
-                     *
-                     * Стандартное изменение размера картинки, по двум сторонам
-                     * или только по ширине, если параметр $size[1] не будет задан.
                      */
-
                     $file = ResizeNormal( $T, $_GET['file'], $size );
                 break;
 
                 case 'rl':
                     /**
                      * Ресайз по большей стороне
-                     *
-                     * Тоже самое что и обычный ресайз, но параметр $size[1]
-                     * не учитывается.
-                     * Будут определены размеры исходного файла и в зависимости от того,
-                     * какая сторона больше - она будет ужата до $size[0]
                      */
                     $file = ResizeLargeSide( $T, $_GET['file'], $size );
                 break;
@@ -136,11 +129,7 @@
                 case 'ra':
                     /**
                      * Адаптивный ресайз
-                     *
-                     * Всегда возвращает картинку заданных размеров.
-                     * Работает хитро, но очень круто.
                      */
-
                     $file = ResizeAdaptive( $T, $_GET['file'], $size );
                 break;
 
@@ -148,7 +137,6 @@
                     /**
                      * Обрезание картинки от центра
                      */
-
                     $file = CropFromCenter( $T, $_GET['file'], $size );
                 break;
 
@@ -156,7 +144,7 @@
                     /**
                      * Скругленные углы
                      */
-                    $file = RoundedCorners( $T, $_GET['file'], $size );
+                    $file = RoundedCorners( $T, $_GET['file'], $size, 10, 10 );
                 break;
 
                 default:
@@ -180,7 +168,18 @@
         die();
     }
 
-
+    /**
+     * Обычный ресайз
+     *
+     * Стандартное изменение размера картинки, по двум сторонам
+     * или только по ширине, если параметр $size[1] не будет задан.
+     *
+     * @param   Object    $T (phpThumb)
+     * @param   string    $file
+     * @param   mixed     $size
+     *
+     * @return  string    $file_path
+     */
     function ResizeNormal( $t , $file, $size, $folder = 'rn' )
     {
         if( is_array( $size ) )
@@ -199,6 +198,20 @@
         return $file;
     }
 
+    /**
+     * Ресайз по большей стороне
+     *
+     * Тоже самое что и обычный ресайз, но параметр $size[1]
+     * не учитывается.
+     * Будут определены размеры исходного файла и в зависимости от того,
+     * какая сторона больше - она будет ужата до $size[0]
+     *
+     * @param   Object    $T (phpThumb)
+     * @param   string    $file
+     * @param   mixed     $size
+     *
+     * @return  string    $file_path
+     */
     function ResizeLargeSide( $t , $file, $size )
     {
         list( $size_ori[0], $size_ori[1] ) = getimagesize( MAIN_FOLDER . '/' . $file);
@@ -222,6 +235,18 @@
         return $file;
     }
 
+    /**
+    * Адаптивный ресайз
+    *
+    * Всегда возвращает картинку заданных размеров.
+    * Работает хитро, но очень круто.
+    *
+    * @param    Object    $T (phpThumb)
+    * @param    string    $file
+    * @param    mixed     $size
+    *
+    * @return  string    $file_path
+    */
     function ResizeAdaptive( $t, $file, $size, $folder = 'ra' )
     {
         $t->adaptiveResize( $size[0], $size[1] );
@@ -233,6 +258,15 @@
         return $file;
     }
 
+    /**
+     * Обрезание картинки от центра
+     *
+     * @param   Object    $T (phpThumb)
+     * @param   string    $file
+     * @param   mixed     $size
+     *
+     * @return  string    $file_path
+     */
     function CropFromCenter( $t, $file, $size, $folder = 'cc' )
     {
         if( empty( $size[0] ) OR empty( $size[1] ) )
@@ -250,9 +284,20 @@
 
     }
 
-    function RoundedCorners( $t, $file, $size, $folder = 'rc' )
+    /**
+     * Скругленные углы
+     *
+     * @param   Object    $T (phpThumb)
+     * @param   string    $file
+     * @param   mixed     $size
+     * @param   int       $radius
+     * @param   int       $rate
+     *
+     * @return  string    $file_path
+     */
+    function RoundedCorners( $t, $file, $size, $folder = 'rc', $radius = 10, $rate = 10 )
     {
-        $t->adaptiveResize( $size[0], $size[1] )->createRounded(10,10);
+        $t->adaptiveResize( $size[0], $size[1] )->createRounded( $radius, $rate );
 
         $save_size = SaveSize( $size );
 
@@ -261,6 +306,12 @@
         return $file;
     }
 
+    /**
+     * Сохранение сгенерированной картинки
+     *
+     * @param Object    $T (phpthumb)
+     * @param string    $filepath
+     */
     function SaveFile( $T, $file )
     {
         if( is_object( $T ) AND !empty( $file ) )
@@ -277,6 +328,12 @@
         }
     }
 
+    /**
+     * Генерация пути размера
+     *
+     * @param mixed $size
+     * @return sting $save_size
+     */
     function SaveSize( $size )
     {
         if( is_array( $size ) )
@@ -307,7 +364,9 @@
 
     /**
      * Возвращает ключ элемента с максмальным значением
-     * @param mixed $array
+     *
+     * @param   mixed $array
+     * @return  sting $key
      */
     function max_key ( $array )
     {
@@ -316,7 +375,9 @@
 
     /**
      * Возвращает ключ элемента с минимальным значением
-     * @param mixed $array
+     *
+     * @param   mixed $array
+     * @return  sting $key
      */
     function min_key ( $array )
     {
