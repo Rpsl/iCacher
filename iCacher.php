@@ -81,7 +81,7 @@
     if( !empty( $_GET['file'] )
         AND !empty( $_GET['size'] )
         AND !empty( $_GET['param'] )
-        AND file_exists( MAIN_FOLDER . '/' . $_GET['file'] )
+        AND file_exists(realpath( MAIN_FOLDER . '/' . $_GET['file'] ))
     )
     {
         if( !is_numeric( $_GET['size'] ) )
@@ -96,20 +96,15 @@
 
         try
         {
-            include PHPTHUMB_FOLDER . '/ThumbLib.inc.php';
+            require_once PHPTHUMB_FOLDER . '/ThumbLib.inc.php';
 
             $options = array(
                 'resizeUp'              => true,
                 'jpegQuality'           => JPEG_QUALITY,
                 'correctPermissions'    => true
-                //'preserveAlpha'         => true,
-                //'preserveTransparency'  => true,
-                //'alphaMaskColor'        => array(255, 255, 255, 255)
             );
 
             $T = PhpThumbFactory::create( MAIN_FOLDER . '/' . $_GET['file'] , $options);
-
-            $file = '';
 
             switch( $_GET['param'] ):
                 case 'rn':
@@ -147,6 +142,13 @@
                     $file = RoundedCorners( $T, $_GET['file'], $size, 10, 10 );
                 break;
 
+                case 'fx':
+                    /**
+                     * Фиксированный ресайз
+                     */
+                    $file = FixedResize( $T, $_GET['file'], $size );
+                break;
+
                 default:
                     header("HTTP/1.0 404 Not Found");
                     die();
@@ -154,7 +156,6 @@
             endswitch;
 
             SaveFile( $T, $file );
-
         }
         catch (Exception $e)
         {
@@ -177,6 +178,7 @@
      * @param   Object    $T (phpThumb)
      * @param   string    $file
      * @param   mixed     $size
+     * @param   string    $folder
      *
      * @return  string    $file_path
      */
@@ -244,6 +246,7 @@
     * @param    Object    $T (phpThumb)
     * @param    string    $file
     * @param    mixed     $size
+    * @param    string    $folder
     *
     * @return  string    $file_path
     */
@@ -264,6 +267,7 @@
      * @param   Object    $T (phpThumb)
      * @param   string    $file
      * @param   mixed     $size
+     * @param   string    $folder
      *
      * @return  string    $file_path
      */
@@ -307,6 +311,38 @@
     }
 
     /**
+     * Фиксированный ресайз
+     *
+     * Изменение размера картинки в фиксированный размер с задником, по двум сторонам
+     * или только по ширине, если параметр $size[1] не будет задан.
+     *
+     * @param   Object    $T (phpThumb)
+     * @param   string    $file
+     * @param   mixed     $size
+     * @param   string    $color
+     * @param   string    $folder
+     *
+     * @return  string    $file_path
+     */
+    function FixedResize( $t, $file, $size, $color = '#FFFFFF', $folder = 'fx' )
+    {
+        if( is_array( $size ) )
+        {
+            $t->resizeFixedSize( $size[0], $size[1], $color );
+        }
+        else
+        {
+            $t->resizeFixedSize( $size, $size, $color );
+        }
+
+        $save_size = SaveSize( $size );
+
+        $file = CACHE_FOLDER . '/' . $folder . '/'. $save_size . '/' . $file;
+
+        return $file;
+    }
+
+    /**
      * Сохранение сгенерированной картинки
      *
      * @param Object    $T (phpthumb)
@@ -323,7 +359,7 @@
                 mkdir( $dirname, 0777, true);
             }
 
-            $T->save( $file, 'png' );
+            $T->save( $file );
             $T->show();
         }
     }
